@@ -33,6 +33,7 @@ from lsst.afw.display import getDisplay
 from . import isr
 from .isrLib import maskNans
 from .assembleCcdTask import AssembleCcdTask
+from .proportionalLinearize import ProportionalLinearizeTask
 from .fringe import FringeTask
 from lsst.afw.geom.polygon import Polygon
 from lsst.afw.cameraGeom import PIXELS, FOCAL_PLANE
@@ -42,6 +43,11 @@ class IsrTaskConfig(pexConfig.Config):
     doBias = pexConfig.Field(
         dtype = bool,
         doc = "Apply bias frame correction?",
+        default = True,
+    )
+    doLinearize = pexConfig.Field(
+        dtype = bool,
+        doc = "Correct for nonlinearity of the detector's response?",
         default = True,
     )
     doDark = pexConfig.Field(
@@ -83,6 +89,10 @@ class IsrTaskConfig(pexConfig.Config):
         doc = "The saturation level to use if no Detector is present in the Exposure (ignored if NaN)",
         default = float("NaN"),
         )
+    linearize = pexConfig.ConfigurableField(
+        target = ProportionalLinearizeTask,
+        doc = "Task to correct for nonlinearity of the detector's response",
+    )
     fringeAfterFlat = pexConfig.Field(
         dtype = bool,
         doc = "Do fringe subtraction after flat-fielding?",
@@ -366,6 +376,8 @@ class IsrTask(pipeBase.CmdLineTask):
         '''
         pipeBase.Task.__init__(self, *args, **kwargs)
         self.makeSubtask("assembleCcd")
+        if self.config.doLinearize:
+            self.makeSubtask("linearize")
         self.makeSubtask("fringe")
 
     def readIsrData(self, dataRef, rawExposure):
@@ -461,6 +473,9 @@ class IsrTask(pipeBase.CmdLineTask):
 
         if self.config.doBias:
             self.biasCorrection(ccdExposure, bias)
+
+        if self.config.doLinearize:
+            self.linearize.run(ccdExposure)
 
         if self.config.doBrighterFatter:
             self.brighterFatterCorrection(ccdExposure, bfKernel,
