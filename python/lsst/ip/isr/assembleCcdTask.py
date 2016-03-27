@@ -1,7 +1,7 @@
-# 
+#
 # LSST Data Management System
 # Copyright 2008-2016 AURA/LSST.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -9,14 +9,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import lsst.afw.cameraGeom as cameraGeom
@@ -30,6 +30,7 @@ from .isr import calcEffectiveGain
 
 __all__ = ["AssembleCcdTask"]
 
+
 class AssembleCcdConfig(pexConfig.Config):
     setGain = pexConfig.Field(
         doc = "set gain?",
@@ -38,10 +39,10 @@ class AssembleCcdConfig(pexConfig.Config):
     )
     doRenorm = pexConfig.Field(
         doc = "renormalize to a gain of 1? (ignored if setGain false). "
-            "Setting to True gives 1 ADU per electron. "
-            "Setting to True is not recommended for mosaic cameras because it breaks normalization across "
-            "the focal plane. However, if the CCDs are sufficiently flat then the resulting error "
-            "may be acceptable.",
+        "Setting to True gives 1 ADU per electron. "
+        "Setting to True is not recommended for mosaic cameras because it breaks normalization across "
+        "the focal plane. However, if the CCDs are sufficiently flat then the resulting error "
+        "may be acceptable.",
         dtype = bool,
         default = False,
     )
@@ -56,12 +57,13 @@ class AssembleCcdConfig(pexConfig.Config):
         default = (),
     )
 
-## \addtogroup LSST_task_documentation
-## \{
-## \page AssembleCcdTask
-## \ref AssembleCcdTask_ "AssembleCcdTask"
-## \copybrief AssembleCcdTask
-## \}
+# \addtogroup LSST_task_documentation
+# \{
+# \page AssembleCcdTask
+# \ref AssembleCcdTask_ "AssembleCcdTask"
+# \copybrief AssembleCcdTask
+# \}
+
 
 class AssembleCcdTask(pipeBase.Task):
     """!
@@ -159,7 +161,7 @@ class AssembleCcdTask(pipeBase.Task):
     """
     ConfigClass = AssembleCcdConfig
     _DefaultName = "assembleCcd"
-    
+
     def __init__(self, **kwargs):
         """!Initialize the AssembleCcdTask
 
@@ -169,7 +171,7 @@ class AssembleCcdTask(pipeBase.Task):
         pipeBase.Task.__init__(self, **kwargs)
 
         self.allKeysToRemove = ('DATASEC', 'BIASSEC', 'TRIMSEC', 'GAIN') + tuple(self.config.keysToRemove)
-    
+
     def assembleCcd(self, assembleInput):
         """!Assemble a set of amps into a single CCD size image
         \param[in] assembleInput -- Either a dictionary of amp lsst.afw.image.Exposures or a single 
@@ -197,11 +199,13 @@ class AssembleCcdTask(pipeBase.Task):
             # Get a detector object for this set of amps
             ccd = assembleInput.itervalues().next().getDetector()
             # Sent a dictionary of input exposures, assume one amp per key keyed on amp name
+
             def getNextExposure(amp):
                 return assembleInput[amp.getName()]
         elif hasattr(assembleInput, "getMaskedImage"):
             ccd = assembleInput.getDetector()
             # A single exposure was sent.  Use this to assemble.
+
             def getNextExposure(amp):
                 return assembleInput
         else:
@@ -221,20 +225,20 @@ class AssembleCcdTask(pipeBase.Task):
             assemble = cameraGeom.assembleAmplifierImage
         else:
             assemble = cameraGeom.assembleAmplifierRawImage
-        
+
         for amp in ccd:
             inMI = getNextExposure(amp).getMaskedImage()
             assemble(outMI, inMI, amp)
         outExposure.setDetector(ccd)
         self.postprocessExposure(outExposure=outExposure, inExposure=getNextExposure(ccd[0]))
-    
+
         return outExposure
-    
+
     def postprocessExposure(self, outExposure, inExposure):
         """Set exposure non-image attributes, including wcs and metadata and display exposure (if requested)
-        
+
         Call after assembling the pixels
-        
+
         @param[in,out]  outExposure assembled exposure:
                                     - removes unwanted keywords
                                     - sets calib, filter, and detector

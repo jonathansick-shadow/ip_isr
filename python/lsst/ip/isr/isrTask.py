@@ -38,6 +38,7 @@ from lsst.afw.geom.polygon import Polygon
 from lsst.afw.cameraGeom import PIXELS, FOCAL_PLANE
 from contextlib import contextmanager
 
+
 class IsrTaskConfig(pexConfig.Config):
     doBias = pexConfig.Field(
         dtype = bool,
@@ -58,7 +59,7 @@ class IsrTaskConfig(pexConfig.Config):
         dtype = bool,
         doc = "Apply fringe correction?",
         default = True,
-        )
+    )
     doWrite = pexConfig.Field(
         dtype = bool,
         doc = "Persist postISRCCD?",
@@ -72,26 +73,26 @@ class IsrTaskConfig(pexConfig.Config):
         dtype = float,
         doc = "The gain to use if no Detector is present in the Exposure (ignored if NaN)",
         default = float("NaN"),
-        )
+    )
     readNoise = pexConfig.Field(
         dtype = float,
         doc = "The read noise to use if no Detector is present in the Exposure",
         default = 0.0,
-        )
+    )
     saturation = pexConfig.Field(
         dtype = float,
         doc = "The saturation level to use if no Detector is present in the Exposure (ignored if NaN)",
         default = float("NaN"),
-        )
+    )
     fringeAfterFlat = pexConfig.Field(
         dtype = bool,
         doc = "Do fringe subtraction after flat-fielding?",
         default = True,
-        )
+    )
     fringe = pexConfig.ConfigurableField(
         target = FringeTask,
         doc = "Fringe subtraction task",
-        )
+    )
     fwhm = pexConfig.Field(
         dtype = float,
         doc = "FWHM of PSF (arcsec)",
@@ -107,8 +108,8 @@ class IsrTaskConfig(pexConfig.Config):
         doc = "The method for scaling the flat on the fly.",
         default = 'USER',
         allowed = {
-            "USER":   "Scale by flatUserScale",
-            "MEAN":   "Scale by the inverse of the mean",
+            "USER": "Scale by flatUserScale",
+            "MEAN": "Scale by the inverse of the mean",
             "MEDIAN": "Scale by the inverse of the median",
         },
     )
@@ -124,7 +125,7 @@ class IsrTaskConfig(pexConfig.Config):
         allowed = {
             "POLY": "Fit ordinary polynomial to the longest axis of the overscan region",
             "CHEB": "Fit Chebyshev polynomial to the longest axis of the overscan region",
-            "LEG":  "Fit Legendre polynomial to the longest axis of the overscan region",
+            "LEG": "Fit Legendre polynomial to the longest axis of the overscan region",
             "NATURAL_SPLINE": "Fit natural spline to the longest axis of the overscan region",
             "CUBIC_SPLINE": "Fit cubic spline to the longest axis of the overscan region",
             "AKIMA_SPLINE": "Fit Akima spline to the longest axis of the overscan region",
@@ -167,54 +168,55 @@ class IsrTaskConfig(pexConfig.Config):
         dtype = bool,
         default = False,
         doc = "Assemble amp-level calibration exposures into ccd-level exposure?"
-        )
+    )
     doAssembleCcd = pexConfig.Field(
         dtype = bool,
         default = True,
         doc = "Assemble amp-level exposures into a ccd-level exposure?"
-        )
+    )
     doBrighterFatter = pexConfig.Field(
         dtype = bool,
         default = False,
         doc = "Apply the brighter fatter correction"
-        )
+    )
     brighterFatterKernelFile = pexConfig.Field(
         dtype = str,
         default = '',
         doc = "Kernel file used for the brighter fatter correction"
-        )
+    )
     brighterFatterMaxIter = pexConfig.Field(
         dtype = int,
         default = 10,
         doc = "Maximum number of iterations for the brighter fatter correction"
-        )
+    )
     brighterFatterThreshold = pexConfig.Field(
         dtype = float,
         default = 1000,
         doc = "Threshold used to stop iterating the brighter fatter correction.  It is the "
         " absolute value of the difference between the current corrected image and the one"
         " from the previous iteration summed over all the pixels."
-        )
+    )
     brighterFatterApplyGain = pexConfig.Field(
         dtype = bool,
         default = True,
         doc = "Should the gain be applied when applying the brighter fatter correction?"
-        )
+    )
     datasetType = pexConfig.Field(
         dtype = str,
         doc = "Dataset type for input data; users will typically leave this alone, "
-            "but camera-specific ISR tasks will override it",
+        "but camera-specific ISR tasks will override it",
         default = "raw",
     )
     fallbackFilterName = pexConfig.Field(dtype=str,
-            doc="Fallback default filter name for calibrations", optional=True)
- 
-## \addtogroup LSST_task_documentation
-## \{
-## \page IsrTask
-## \ref IsrTask_ "IsrTask"
-## \copybrief IsrTask
-## \}
+                                         doc="Fallback default filter name for calibrations", optional=True)
+
+# \addtogroup LSST_task_documentation
+# \{
+# \page IsrTask
+# \ref IsrTask_ "IsrTask"
+# \copybrief IsrTask
+# \}
+
 
 class IsrTask(pipeBase.CmdLineTask):
     """!
@@ -391,12 +393,12 @@ class IsrTask(pipeBase.CmdLineTask):
         defectList = dataRef.get("defects")
 
         if self.config.doFringe and self.fringe.checkFilter(rawExposure):
-            fringeStruct = self.fringe.readFringes(dataRef, assembler=self.assembleCcd \
-                                              if self.config.doAssembleIsrExposures else None)
+            fringeStruct = self.fringe.readFringes(dataRef, assembler=self.assembleCcd
+                                                   if self.config.doAssembleIsrExposures else None)
         else:
             fringeStruct = pipeBase.Struct(fringes = None)
 
-        #Struct should include only kwargs to run()
+        # Struct should include only kwargs to run()
         return pipeBase.Struct(bias = biasExposure,
                                dark = darkExposure,
                                flat = flatExposure,
@@ -406,7 +408,7 @@ class IsrTask(pipeBase.CmdLineTask):
                                )
 
     @pipeBase.timeMethod
-    def run(self, ccdExposure, bias=None, dark=None,  flat=None, defects=None, fringes=None, bfKernel=None):
+    def run(self, ccdExposure, bias=None, dark=None, flat=None, defects=None, fringes=None, bfKernel=None):
         """!Perform instrument signature removal on an exposure
 
         Steps include:
@@ -427,7 +429,7 @@ class IsrTask(pipeBase.CmdLineTask):
          - exposure
         """
 
-        #Validate Input
+        # Validate Input
         if self.config.doBias and bias is None:
             raise RuntimeError("Must supply a bias exposure if config.doBias True")
         if self.config.doDark and dark is None:
@@ -451,7 +453,7 @@ class IsrTask(pipeBase.CmdLineTask):
             ccd = [FakeAmp(ccdExposure, self.config)]
 
         for amp in ccd:
-            #if ccdExposure is one amp, check for coverage to prevent performing ops multiple times
+            # if ccdExposure is one amp, check for coverage to prevent performing ops multiple times
             if ccdExposure.getBBox().contains(amp.getBBox()):
                 self.saturationDetection(ccdExposure, amp)
                 self.overscanCorrection(ccdExposure, amp)
@@ -473,7 +475,7 @@ class IsrTask(pipeBase.CmdLineTask):
             self.darkCorrection(ccdExposure, dark)
 
         for amp in ccd:
-            #if ccdExposure is one amp, check for coverage to prevent performing ops multiple times
+            # if ccdExposure is one amp, check for coverage to prevent performing ops multiple times
             if ccdExposure.getBBox().contains(amp.getBBox()):
                 ampExposure = ccdExposure.Factory(ccdExposure, amp.getBBox())
                 self.updateVariance(ampExposure, amp)
@@ -502,7 +504,6 @@ class IsrTask(pipeBase.CmdLineTask):
         return pipeBase.Struct(
             exposure = ccdExposure,
         )
-
 
     @pipeBase.timeMethod
     def runDataRef(self, sensorRef):
@@ -540,9 +541,9 @@ class IsrTask(pipeBase.CmdLineTask):
         newexposure = exposure.convertF()
         maskedImage = newexposure.getMaskedImage()
         varArray = maskedImage.getVariance().getArray()
-        varArray[:,:] = 1
+        varArray[:, :] = 1
         maskArray = maskedImage.getMask().getArray()
-        maskArray[:,:] = 0
+        maskArray[:, :] = 0
         return newexposure
 
     def biasCorrection(self, exposure, biasExposure):
@@ -603,17 +604,17 @@ class IsrTask(pipeBase.CmdLineTask):
         \return exposure
         """
         try:
-            exp=dataRef.get(datasetType, immediate=immediate)
+            exp = dataRef.get(datasetType, immediate=immediate)
         except:
             try:
-                exp=dataRef.get(datasetType, filter=self.config.fallbackFilterName, immediate=immediate)
+                exp = dataRef.get(datasetType, filter=self.config.fallbackFilterName, immediate=immediate)
                 self.log.warn("Using fallback calibration from filter %s" % self.config.fallbackFilterName)
             except Exception as e:
                 extraMessage = ''
                 if not self.config.fallbackFilterName:
                     extraMessage += ' and no fallback filter specified'
                 raise RuntimeError("Unable to retrieve %s for %s%s: %s" % (datasetType, dataRef.dataId,
-                                                                            extraMessage, e))
+                                                                           extraMessage, e))
         if self.config.doAssembleIsrExposures:
             exp = self.assembleCcd.assembleCcd(exp)
         return exp
@@ -626,7 +627,7 @@ class IsrTask(pipeBase.CmdLineTask):
         """
         if not math.isnan(amp.getSaturation()):
             maskedImage = exposure.getMaskedImage()
-            dataView=maskedImage.Factory(maskedImage, amp.getRawBBox())
+            dataView = maskedImage.Factory(maskedImage, amp.getRawBBox())
             isr.makeThresholdMask(
                 maskedImage=dataView,
                 threshold=amp.getSaturation(),
@@ -685,7 +686,7 @@ class IsrTask(pipeBase.CmdLineTask):
         maskedImage = exposure.getMaskedImage()
 
         # Find and mask NaNs
-        maskedImage.getMask().addMaskPlane("UNMASKEDNAN") 
+        maskedImage.getMask().addMaskPlane("UNMASKEDNAN")
         maskVal = maskedImage.getMask().getPlaneBitMask("UNMASKEDNAN")
         numNans = maskNans(maskedImage, maskVal)
         self.metadata.set("NUMNANS", numNans)
@@ -812,8 +813,8 @@ class IsrTask(pipeBase.CmdLineTask):
                 outArray = outImage.getArray()
 
                 # First derivative term
-                gradTmp = numpy.gradient(tmpArray[startY:endY,startX:endX])
-                gradOut = numpy.gradient(outArray[startY:endY,startX:endX])
+                gradTmp = numpy.gradient(tmpArray[startY:endY, startX:endX])
+                gradOut = numpy.gradient(outArray[startY:endY, startX:endX])
                 first = (gradTmp[0]*gradOut[0] + gradTmp[1]*gradOut[1])
 
                 # Second derivative term
@@ -824,18 +825,18 @@ class IsrTask(pipeBase.CmdLineTask):
                 corr[startY:endY, startX:endX] = 0.5*(first + second)
 
                 # reset tmp image and apply correction
-                tmpArray[:,:] = image.getArray()[:,:]
+                tmpArray[:, :] = image.getArray()[:, :]
                 tmpArray[nanIndex] = 0.
-                tmpArray[startY:endY, startX:endX] += corr[startY:endY,startX:endX]
+                tmpArray[startY:endY, startX:endX] += corr[startY:endY, startX:endX]
 
                 if iteration > 0:
                     diff = numpy.sum(numpy.abs(prev_image - tmpArray))
 
                     if diff < threshold:
                         break
-                    prev_image[:,:] = tmpArray[:,:]
+                    prev_image[:, :] = tmpArray[:, :]
 
-            if iteration == maxIter -1:
+            if iteration == maxIter - 1:
                 self.log.warn("Brighter fatter correction did not converge, final difference %f" % diff)
 
             self.log.info("Finished brighter fatter in %d iterations" % (iteration))
@@ -860,8 +861,10 @@ class IsrTask(pipeBase.CmdLineTask):
                     sim = image.Factory(image, amp.getBBox())
                     sim /= amp.getGain()
 
+
 class FakeAmp(object):
     """A Detector-like object that supports returning gain and saturation level"""
+
     def __init__(self, exposure, config):
         self._bbox = exposure.getBBox(afwImage.LOCAL)
         self._RawHorizontalOverscanBBox = afwGeom.Box2I()
@@ -880,7 +883,7 @@ class FakeAmp(object):
 
     def getRawHorizontalOverscanBBox(self):
         return self._RawHorizontalOverscanBBox
-    
+
     def getGain(self):
         return self._gain
 

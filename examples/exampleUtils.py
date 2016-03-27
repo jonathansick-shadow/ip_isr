@@ -8,20 +8,22 @@ import lsst.afw.coord as afwCoord
 import lsst.afw.table as afwTable
 import lsst.afw.image as afwImage
 
+
 def getReadCorner(flipx, flipy):
     """Get the read corner from flips of the pixel grid
     \param[in] flipx: Flip the x-axis?
     \param[in] flipy: Flip the y-axis?
     \return The read corner in assembled coordinates.
     """
-    cornerMap = {(True, True):afwTable.UR,
-                 (True, False):afwTable.LR,
-                 (False, True):afwTable.UL,
-                 (False, False):afwTable.LL}
+    cornerMap = {(True, True): afwTable.UR,
+                 (True, False): afwTable.LR,
+                 (False, True): afwTable.UL,
+                 (False, False): afwTable.LL}
     return cornerMap[(bool(flipx), bool(flipy))]
 
+
 def populateAmpBoxes(nx, ny, nprescan, nhoverscan, nvoverscan, nextended, flipx, flipy, ix, iy,
-                      isPerAmp, record):
+                     isPerAmp, record):
     '''!Fill ampInfo tables
     \param[in] isPerAmp -- If True, return a dictionary of amp exposures keyed by amp name.
                            If False, return a single exposure with amps mosaiced preserving non-science pixels
@@ -72,7 +74,7 @@ def populateAmpBoxes(nx, ny, nprescan, nhoverscan, nvoverscan, nextended, flipx,
     ytot = allBox.getDimensions().getY()
     rShiftExt = afwGeom.ExtentI(ix*xtot, iy*ytot)
     if not isPerAmp:
-        #Set read corner in assembled coordinates
+        # Set read corner in assembled coordinates
         record.setReadoutCorner(getReadCorner(flipx, flipy))
 
         allBox.shift(rShiftExt)
@@ -101,9 +103,9 @@ def populateAmpBoxes(nx, ny, nprescan, nhoverscan, nvoverscan, nextended, flipx,
         rawYoff = 0
 
     else:
-        #We assume that single amp images have the first pixel read in the
-        #lower left and that the pixels are arrange such that the
-        #serial is along the x-axis.
+        # We assume that single amp images have the first pixel read in the
+        # lower left and that the pixels are arrange such that the
+        # serial is along the x-axis.
         record.setReadoutCorner(afwTable.LL)
         rawXoff = rShiftExt.getX()
         rawYoff = rShiftExt.getY()
@@ -125,6 +127,7 @@ def populateAmpBoxes(nx, ny, nprescan, nhoverscan, nvoverscan, nextended, flipx,
     record.setRawHorizontalOverscanBBox(hOscanBox)
     record.setRawVerticalOverscanBBox(vOscanBox)
     record.setRawPrescanBBox(preBox)
+
 
 def createDetector(nAmpX, nAmpY, nPixX, nPixY, pre, hOscan, vOscan, ext, isPerAmp):
     '''!Fill ampInfo tables
@@ -149,7 +152,7 @@ def createDetector(nAmpX, nAmpY, nPixX, nPixY, pre, hOscan, vOscan, ext, isPerAm
             flipx = not flipx
             record = ampCatalog.addNew()
             populateAmpBoxes(nPixX, nPixY, pre, hOscan, vOscan, ext, flipx, flipy, ix, iy,
-                              isPerAmp, record)
+                             isPerAmp, record)
             record.setGain(ix+iy*nAmpX+1.)
 
     detConfig = DetectorConfig()
@@ -159,7 +162,7 @@ def createDetector(nAmpX, nAmpY, nPixX, nPixY, pre, hOscan, vOscan, ext, isPerAm
     detConfig.bbox_y0 = 0
     detConfig.bbox_x1 = nAmpX*nPixX - 1
     detConfig.bbox_y1 = nAmpY*nPixY - 1
-    detConfig.detectorType = 0 #Science type
+    detConfig.detectorType = 0  # Science type
     detConfig.serial = 'THX1138'
     detConfig.offset_x = 0.
     detConfig.offset_y = 0.
@@ -168,8 +171,8 @@ def createDetector(nAmpX, nAmpY, nPixX, nPixY, pre, hOscan, vOscan, ext, isPerAm
     detConfig.yawDeg = 0.
     detConfig.pitchDeg = 0.
     detConfig.rollDeg = 0.
-    detConfig.pixelSize_x = 10./1000. #in mm
-    detConfig.pixelSize_y = 10./1000. #in mm
+    detConfig.pixelSize_x = 10./1000.  # in mm
+    detConfig.pixelSize_y = 10./1000.  # in mm
     detConfig.transposeDetector = False
     detConfig.transformDict.nativeSys = PIXELS.getSysName()
 
@@ -177,12 +180,14 @@ def createDetector(nAmpX, nAmpY, nPixX, nPixY, pre, hOscan, vOscan, ext, isPerAm
     plateScale = 1.
     return makeDetector(detConfig, ampCatalog, fpTransform, plateScale)
 
+
 def makeFakeWcs():
     '''!Make a wcs to put in an exposure
     \return a Wcs object
     '''
     return afwImage.makeWcs(afwCoord.IcrsCoord(45.0*afwGeom.degrees, 45.0*afwGeom.degrees),
-                           afwGeom.Point2D(0.0, 0.0), 1.0, 0.0, 0.0, 1.0)
+                            afwGeom.Point2D(0.0, 0.0), 1.0, 0.0, 0.0, 1.0)
+
 
 def makeExpFromIm(im, detector):
     wcs = makeFakeWcs()
@@ -193,6 +198,7 @@ def makeExpFromIm(im, detector):
     exp.setDetector(detector)
     exp.setWcs(wcs)
     return exp
+
 
 def makeAmpInput(detector):
     '''!Make a dictionary of amp images for assembly
@@ -206,6 +212,7 @@ def makeAmpInput(detector):
         inputData[amp.getName()] = exp
     return inputData
 
+
 def makeAssemblyInput(isPerAmp, doTrim=False):
     '''!Make the input to pass to the assembly task
     \param[in] isPerAmp -- If True, return a dictionary of amp exposures keyed by amp name.
@@ -215,24 +222,24 @@ def makeAssemblyInput(isPerAmp, doTrim=False):
     \return Either a dictionary of amp exposures or an exposure contining the mosaiced amps.
     '''
 
-    #number of amps in x and y
+    # number of amps in x and y
     nAmpX = 3
     nAmpY = 2
 
-    #number of science pixels in each amp in x and y
+    # number of science pixels in each amp in x and y
     nPixX = 512
     nPixY = 1024
 
-    #number of prescan rows
+    # number of prescan rows
     pre = 4
 
-    #number of horizontal overscan columns
+    # number of horizontal overscan columns
     hOscan = 10
 
-    #number of vertical overscan rows
+    # number of vertical overscan rows
     vOscan = 15
 
-    #number of pixels in the extended register
+    # number of pixels in the extended register
     ext = 1
 
     detector = createDetector(nAmpX, nAmpY, nPixX, nPixY, pre, hOscan, vOscan, ext, isPerAmp)
@@ -243,6 +250,7 @@ def makeAssemblyInput(isPerAmp, doTrim=False):
         ccdAssemblyInput = makeExpFromIm(im, detector)
         ccdAssemblyInput.setDetector(detector)
         return ccdAssemblyInput
+
 
 def makeRaw(darkval, oscan, gradient, exptime):
     '''!Make a raw image for input to ISR
@@ -271,6 +279,7 @@ def makeRaw(darkval, oscan, gradient, exptime):
         suboscanim.set(oscan)
     return rawExposure
 
+
 def makeDark(darkval, exptime):
     '''!Make a dark exposure in DN
     \param[in] darkval -- dark current in e-/sec
@@ -286,6 +295,7 @@ def makeDark(darkval, exptime):
         subim = im.Factory(im, amp.getBBox())
         subim.set(darkval*exptime/amp.getGain())
     return darkExposure
+
 
 def makeFlat(gradient):
     '''!Make a flat exposure including gain variation
@@ -305,17 +315,19 @@ def makeFlat(gradient):
         subArr /= amp.getGain()
     return flatExposure
 
+
 class FakeDataRef(object):
     '''!A mock data reference to use in the example IsrTask runner
     The main thing is to define the get method with the relevant datatypes.
     This can be extended to mimic other getters (fringe, e.g.) if needed.
     '''
-    darkval = 2. #e-/sec
-    oscan = 1000. #DN
+    darkval = 2.  # e-/sec
+    oscan = 1000.  # DN
     gradient = .10
-    exptime = 15 #seconds
-    darkexptime = 40. #seconds
+    exptime = 15  # seconds
+    darkexptime = 40.  # seconds
     dataId = "My Fake Data"
+
     def get(self, dataType, **kwargs):
         if dataType == 'raw':
             return makeRaw(self.darkval, self.oscan, self.gradient, self.exptime)

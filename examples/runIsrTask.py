@@ -1,27 +1,29 @@
 from lsst.ip.isr import IsrTask
 import lsst.afw.display.ds9 as ds9
 import exampleUtils
-import sys, numpy
+import sys
+import numpy
+
 
 def runIsr():
     '''Run the task to do ISR on a ccd'''
 
-    #Create the isr task with modified config
+    # Create the isr task with modified config
     isrConfig = IsrTask.ConfigClass()
-    isrConfig.doBias = False #We didn't make a zero frame
+    isrConfig.doBias = False  # We didn't make a zero frame
     isrConfig.doDark = True
     isrConfig.doFlat = True
-    isrConfig.doFringe = False #There is no fringe frame for this example
+    isrConfig.doFringe = False  # There is no fringe frame for this example
 
-    isrConfig.assembleCcd.setGain = False 
+    isrConfig.assembleCcd.setGain = False
     isrTask = IsrTask(config=isrConfig)
 
-    #Make raw, flat and dark exposures
-    DARKVAL = 2. #e-/sec
-    OSCAN = 1000. #DN
+    # Make raw, flat and dark exposures
+    DARKVAL = 2.  # e-/sec
+    OSCAN = 1000.  # DN
     GRADIENT = .10
-    EXPTIME = 15 #seconds
-    DARKEXPTIME = 40. #seconds
+    EXPTIME = 15  # seconds
+    DARKEXPTIME = 40.  # seconds
 
     darkExposure = exampleUtils.makeDark(DARKVAL, DARKEXPTIME)
     flatExposure = exampleUtils.makeFlat(GRADIENT)

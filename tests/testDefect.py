@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import unittest
@@ -36,7 +36,9 @@ try:
 except NameError:
     display = False
 
+
 class DefectTestCases(unittest.TestCase):
+
     def setUp(self):
         self.setVal = 10.
 
@@ -47,16 +49,16 @@ class DefectTestCases(unittest.TestCase):
         """Test DefectBases"""
 
         defectList = measAlg.DefectListT()
-        ccdImage = afwImage.MaskedImageF(250,225)  
+        ccdImage = afwImage.MaskedImageF(250, 225)
         ccdImage.set(self.setVal, 0, self.setVal)
         #
         # Insert some defects into the Ccd
         #
         for x0, y0, x1, y1 in [
-            (34,  0,   35,  80 ),
-            (34,  81,  34,  100),
+            (34, 0, 35, 80),
+            (34, 81, 34, 100),
             (180, 100, 182, 130),
-            ]:
+        ]:
             bbox = afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Point2I(x1, y1))
             defectList.append(measAlg.Defect(bbox))
             bad = ccdImage.Factory(ccdImage, bbox, afwImage.LOCAL)
@@ -67,7 +69,7 @@ class DefectTestCases(unittest.TestCase):
         bitMask = mask.getPlaneBitMask('BAD')
         for d in defectList:
             bad = mask.Factory(mask, d.getBBox(), afwImage.LOCAL)
-            self.assertTrue((bad.getArray()&bitMask == bitMask).all())
+            self.assertTrue((bad.getArray() & bitMask == bitMask).all())
 
         if display:
             ds9.mtv(ccdImage.getImage(), title="Defects")
@@ -122,6 +124,7 @@ def suite():
     suites += unittest.makeSuite(DefectTestCases)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(exit=False):
     """Run the tests"""
